@@ -1,3 +1,5 @@
+package com.raycoarana.pfa.model;
+
 import java.util.ArrayList;
 
 /**

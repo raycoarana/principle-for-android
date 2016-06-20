@@ -1,3 +1,5 @@
+package com.raycoarana.pfa.model;
+
 import java.util.ArrayList;
 
 /**
@@ -7,7 +9,7 @@ public class PRLink {
 
     public Integer inputProperty;
     public Integer outputProperty;
-    public Integer inputLayer;
+    public PRLayer inputLayer;
     public PRLayer outputLayer;
     public ArrayList<PRKeyframe> keyframes;
 }

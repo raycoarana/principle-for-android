@@ -1,3 +1,5 @@
+package com.raycoarana.pfa.model;
+
 /**
  * Created by RaycoJ on 15/06/2016.
  */

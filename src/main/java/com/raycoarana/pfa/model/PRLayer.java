@@ -1,3 +1,5 @@
+package com.raycoarana.pfa.model;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
@@ -12,6 +14,7 @@ public class PRLayer {
     public Float backgroundColor_2;
     public Float backgroundColor_3;
     public Integer backgroundColor_count;
+    public String backgroundColor_space_name;
     public byte[] backgroundColor_profile;
     public Float radius;
     public Float shadowOffset_width;
@@ -38,5 +41,8 @@ public class PRLayer {
     public Boolean hidden;
     public HashMap animationInfo;
     public Float scale;
+    public Float shadowRadius;
+    public String importID;
+    public Boolean maskToBounds;
 
 }

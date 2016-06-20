@@ -1,6 +1,9 @@
 package com.raycoarana.pfa;
 
 import com.dd.plist.*;
+import com.raycoarana.pfa.model.PREvent;
+import com.raycoarana.pfa.model.PRPrototype;
+import com.raycoarana.pfa.model.PRScreen;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,9 +24,18 @@ public class Main {
             UID rootId = (UID) top.get("root");
             NSObject[] objects = ((NSArray) rootDictionary.get("$objects")).getArray();
             Map<Integer, Object> cache = new HashMap<>();
-            Object rootObject = getValue(objects, cache, rootId);
+            PRPrototype rootObject = (PRPrototype) getValue(objects, cache, rootId);
 
-            System.out.println("File parsed");
+            System.out.println("Screens:");
+            for (PRScreen screens : rootObject.screens) {
+                System.out.println("  - " + screens.name);
+            }
+
+            System.out.println("");
+            System.out.println("Transitions:");
+            for (PREvent transition : rootObject.transitions) {
+                System.out.println("  - " + transition.action.name + " -> " + transition.dependent.name);
+            }
             //PropertyListParser.saveAsXML(propertyList, new File(fileToConvert + ".xml"));
         } catch (IOException e) {
             e.printStackTrace();
@@ -49,21 +61,26 @@ public class Main {
     }
 
     private static Map mapToMap(NSObject[] objects, Map<Integer, Object> cache, NSDictionary rawObject) {
+        NSObject[] keys = ((NSArray) rawObject.get("NS.keys")).getArray();
+        NSObject[] values = ((NSArray) rawObject.get("NS.objects")).getArray();
+
         HashMap hashMap = new HashMap(rawObject.count());
-        for (Map.Entry<String, NSObject> entry : rawObject.entrySet()) {
-            hashMap.put(entry.getKey(), getValue(objects, cache, entry.getValue()));
+        for (int i = 0; i < keys.length; i++) {
+            Object key = getValue(objects, cache, keys[i]);
+            Object value = getValue(objects, cache, values[i]);
+            hashMap.put(key, value);
         }
 
         return hashMap;
     }
 
     private static byte[] mapToData(NSDictionary rawObject) {
-        NSData data = ((NSData)rawObject.get("NS.data"));
+        NSData data = ((NSData) rawObject.get("NS.data"));
         return data.bytes();
     }
 
     private static Set mapToSet(NSObject[] objects, Map<Integer, Object> cache, NSDictionary rawObject) {
-        NSObject[] items = ((NSArray)rawObject.get("NS.objects")).getArray();
+        NSObject[] items = ((NSArray) rawObject.get("NS.objects")).getArray();
         HashSet set = new HashSet(items.length);
         for (NSObject item : items) {
             set.add(getValue(objects, cache, item));
@@ -72,7 +89,7 @@ public class Main {
     }
 
     private static List mapToList(NSObject[] objects, Map<Integer, Object> cache, NSDictionary rawObject) {
-        NSArray nsArray = (NSArray)rawObject.get("NS.objects");
+        NSArray nsArray = (NSArray) rawObject.get("NS.objects");
         return mapNSArrayToList(objects, cache, nsArray);
     }
 
@@ -88,7 +105,7 @@ public class Main {
     @SuppressWarnings("unchecked")
     private static <T> T mapToClass(NSObject[] objects, Map<Integer, Object> cache, String className, NSDictionary rawObject) {
         try {
-            Class<?> clazz = Class.forName(className);
+            Class<?> clazz = Class.forName("com.raycoarana.pfa.model." + className);
             T instance = (T) clazz.newInstance();
             for (String key : rawObject.allKeys()) {
                 if ("$class".equals(key)) {
@@ -118,7 +135,7 @@ public class Main {
                 System.out.println("Warning: UID out of bounds:" + Long.toHexString(index));
                 return null;
             }
-            Object value = cache.get((int)index);
+            Object value = cache.get((int) index);
             if (value != null) {
                 return value;
             } else {
@@ -129,7 +146,7 @@ public class Main {
                 } else {
                     value = getValue(objects, cache, object);
                 }
-                cache.put((int)index, value);
+                cache.put((int) index, value);
                 return value;
             }
         } else if (nsObject instanceof NSNumber) {
@@ -158,20 +175,11 @@ public class Main {
         } else {
             classInfo = dictionary;
         }
-        return ((NSString)classInfo.get("$classname")).getContent();
+        return ((NSString) classInfo.get("$classname")).getContent();
     }
 
     public static long getIndex(UID uid) {
-        StringBuilder ascii = new StringBuilder();
-        for(int i = 0; i < uid.getBytes().length; ++i) {
-            byte b = uid.getBytes()[i];
-            if(b < 16) {
-                ascii.append("0");
-            }
-
-            ascii.append(Integer.toHexString(b));
-        }
-        return Long.valueOf(ascii.toString(), 16);
+        return BinaryPropertyListParser.parseUnsignedInt(uid.getBytes());
     }
 
 }
